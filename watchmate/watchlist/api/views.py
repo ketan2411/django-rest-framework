@@ -2,6 +2,7 @@ from watchlist.models import Movie
 from watchlist.api.serializers import MovieSerlializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status 
  
 @api_view(['GET','POST'])  
 def movie_list(request): 
@@ -15,13 +16,17 @@ def movie_list(request):
             serializer.save()
             return Response(serializer.data)
         else: 
-            return Response(serializer.error)
+            return Response(serializer.error,status=status.HTTP_400_BAD_REQUEST )
             
 #  this did not worked
 @api_view(['GET','PUT','DELETE '])
 def movie_detail(request,pk): 
     if request.method == "GET":
-        movie = Movie.objects.get(pk=pk)
+        try:
+            movie = Movie.objects.get(pk=pk)
+        except Movie.DoesNotExist:
+            return Response({'Error':'Movie not found'},status=status.HTTP_404_NOT_FOUND )
+            
         serializer = MovieSerlializer(movie) 
         return Response(serializer.data)
     if request.method == "PUT":
@@ -37,5 +42,5 @@ def movie_detail(request,pk):
         movie = Movie.objects.get(pk=pk)
         # the object needs to be selected before update otherwise new instance will be created
         movie.delete() 
-        return Response()
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
